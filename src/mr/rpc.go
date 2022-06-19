@@ -6,8 +6,11 @@ package mr
 // remember to capitalize all names.
 //
 
-import "os"
-import "strconv"
+import (
+	"fmt"
+	"os"
+	"strconv"
+)
 
 //
 // example to show how to declare the arguments
@@ -24,6 +27,37 @@ type ExampleReply struct {
 
 // Add your RPC definitions here.
 
+type RegisterWorkerRequest struct{}
+type RegisterWorkerResponse struct {
+	WorkerID int64
+	NReduce  int64
+}
+
+const (
+	TaskTypeMap    = 1
+	TaskTypeReduce = 2
+	TaskTypeNoMore = -1
+	TaskTypeDone   = -2
+)
+
+type GetTaskRequest struct {
+	WorkerID int64
+}
+
+type GetTaskResponse struct {
+	TaskID              int64
+	TaskType            int64
+	MapTaskInputAddr    string
+	ReudceTaskInputAddr map[int64]int64 // map task ID -> worker ID
+}
+
+type FinishTaskRequest struct {
+	WorkerID int64 // 1:map/2:reduce
+	TaskID   int64
+	TaskType int
+}
+
+type FinishTaskResponse struct{}
 
 // Cook up a unique-ish UNIX-domain socket name
 // in /var/tmp, for the coordinator.
@@ -33,4 +67,8 @@ func coordinatorSock() string {
 	s := "/var/tmp/824-mr-"
 	s += strconv.Itoa(os.Getuid())
 	return s
+}
+
+func workerSock(workerID int64) string {
+	return fmt.Sprintf("/var/tmp/824-mr-worker-%d", workerID)
 }
